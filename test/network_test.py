@@ -1,11 +1,12 @@
-import sys, os
-
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-
+import os
+import sys
 import unittest
 
 import torch
-from pointerNetwork import PointerNetwork
+
+from pointer_network import PointerNetwork
+
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 
 class TestModel(unittest.TestCase):
@@ -27,7 +28,6 @@ class TestModel(unittest.TestCase):
 
         self.assertTrue((3, seq_len) == log_probs.size())
         self.assertTrue((3, seq_len) == actions.size())
-
 
 
 if __name__ == "__main__":
