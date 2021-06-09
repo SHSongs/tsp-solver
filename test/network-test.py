@@ -14,7 +14,7 @@ class TestModel(unittest.TestCase):
         embedding_size = 128
         hidden_size = 128
         n_glimpses = 2
-        seq_len = 20
+        seq_len = 3
         tanh_exploration = 10
 
         model = PointerNetwork(embedding_size,
