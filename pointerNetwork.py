@@ -59,10 +59,24 @@ class PointerNetwork(nn.Module):
 
         self.embedding = GraphEmbedding(2, embedding_size)
         self.encoder = nn.LSTM(embedding_size, hidden_size, batch_first=True)
-        self.decoder = nn.LSTMCell(embedding_size, hidden_size)
+        self.decoder = nn.LSTM(embedding_size, hidden_size)
         self.pointer = Attention(hidden_size, C=tanh_exploration)
         self.glimpse = Attention(hidden_size)
 
         self.decoder_start_input = nn.Parameter(torch.FloatTensor(embedding_size))
         self.decoder_start_input.data.uniform_(-(1. / math.sqrt(embedding_size)), 1. / math.sqrt(embedding_size))
 
+    def forward(self, x):
+        """
+        Args:
+            param x: [batch_size x seq_len x 2]
+        """
+        batch_size = x.shape[0]
+        seq_len = x.shape[1]
+
+        embedded = self.embedding(x)
+
+        encoder_output, (hidden, context) = self.encoder(embedded)
+
+
+        return 0
