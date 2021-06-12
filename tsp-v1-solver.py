@@ -5,10 +5,12 @@ import or_gym
 
 import torch
 import torch.optim as optim
-from pointer_network import PointerNetwork
 import matplotlib.pyplot as plt
 
+from pointer_network import PointerNetwork
+from critic_network import CriticNetwork
 from util import rotate_actions, args_parser, visualization, VisualData
+import torch.nn as nn
 
 
 def play_tsp(env, actions):
@@ -37,61 +39,117 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
     env_config = {'N': seq_len}
     env = or_gym.make('TSP-v1', env_config=env_config)
 
-    # model setup
-    model = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses=n_glimpses,
-                           tanh_exploration=tanh_exploration)
-    model.to(device)
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    # actor setup
+    actor = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
+    actor.to(device)
+    optimizer = optim.Adam(actor.parameters(), lr=learning_rate)
 
     # result data
     losses = []
     episodes_length = []
     visual_data = VisualData()
 
-    # Active search
-    moving_avg = torch.zeros(1)
-    first_step = True
+    if train_mode == "active-search":
 
-    for i in range(episode):
-        s = env.reset()
+        # Active search
+        moving_avg = torch.zeros(1)
+        first_step = True
 
-        coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
+        for i in range(episode):
+            s = env.reset()
 
-        log_probs, actions = model(coords.to(device))
+            coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
 
-        # visualization
-        if i % 10 == 9:
-            visual_data.add(coords, actions, i)
-        if i % 100 == 99:
-            c, a, e = visual_data.get()
-            visualization(result_graph_dir, c, a, e)
-            visual_data.clear()
+            log_probs, actions = actor(coords.to(device))
 
-        actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
-        total_reward = play_tsp(env, actions)
+            # visualization
+            if i % 10 == 9:
+                visual_data.add(coords, actions, i)
+            if i % 100 == 99:
+                c, a, e = visual_data.get()
+                visualization(result_graph_dir, c, a, e)
+                visual_data.clear()
 
-        episodes_length.append(total_reward)
-        print('total length', total_reward)
+            actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
+            total_reward = play_tsp(env, actions)
 
-        if first_step:  # generating first baseline
-            moving_avg = total_reward
-            first_step = False
-            continue
+            episodes_length.append(total_reward)
+            print('total length', total_reward)
 
+            if first_step:  # generating first baseline
+                moving_avg = total_reward
+                first_step = False
+                continue
 
-        moving_avg = moving_avg * beta + total_reward * (1.0 - beta)
-        advantage = total_reward - moving_avg
-        log_probs = torch.sum(log_probs)
-        log_probs[log_probs < -100] = - 100
-        loss = advantage * log_probs
+            moving_avg = moving_avg * beta + total_reward * (1.0 - beta)
+            advantage = total_reward - moving_avg
+            log_probs = torch.sum(log_probs)
+            log_probs[log_probs < -100] = - 100
+            actor_loss = advantage * log_probs
 
-        losses.append(loss.item())
-        print('loss : ', loss.item())
+            losses.append(actor_loss.item())
+            print('loss : ', actor_loss.item())
 
-        torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            torch.nn.utils.clip_grad_norm_(actor.parameters(), grad_clip)
+            optimizer.zero_grad()
+            actor_loss.backward()
+            optimizer.step()
+
+    elif train_mode == "actor-critic":
+
+        # critic
+        critic = CriticNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
+        critic.to(device)
+        critic_optimizer = optim.Adam(critic.parameters(), lr=learning_rate)
+        l2Loss = nn.MSELoss()
+
+        for i in range(episode):
+            s = env.reset()
+
+            coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0).to(device)
+
+            log_probs, actions = actor(coords)
+            value = critic(coords)
+
+            # visualization
+            if i % 10 == 9:
+                visual_data.add(coords, actions, i)
+            if i % 100 == 99:
+                c, a, e = visual_data.get()
+                visualization(result_graph_dir, c, a, e)
+                visual_data.clear()
+
+            actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
+            total_reward = play_tsp(env, actions)
+
+            episodes_length.append(total_reward)
+            print('total length', total_reward)
+
+            log_probs = torch.sum(log_probs)
+            log_probs[log_probs < -100] = - 100
+
+            advantage = value - total_reward
+            total_reward = torch.FloatTensor([total_reward]).to(device)
+
+            critic_loss = l2Loss(value.squeeze(0), total_reward)
+            actor_loss = advantage * -log_probs
+
+            loss = actor_loss + critic_loss
+
+            losses.append(loss.item())
+            print('actor loss : ', actor_loss.item())
+            print('critic loss : ', critic_loss.item())
+
+            torch.nn.utils.clip_grad_norm_(actor.parameters(), grad_clip)
+            torch.nn.utils.clip_grad_norm_(critic.parameters(), grad_clip)
+
+            optimizer.zero_grad()
+            critic_optimizer.zero_grad()
+
+            loss.backward()
+
+            optimizer.step()
+            critic_optimizer.step()
 
     plt.close('all')
     plt.plot(range(len(losses)), losses, color="blue")
