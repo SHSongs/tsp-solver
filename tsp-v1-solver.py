@@ -151,20 +151,18 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
             optimizer.step()
             critic_optimizer.step()
 
-    plt.close('all')
-    plt.plot(range(len(losses)), losses, color="blue")
-    plt.title(train_mode + " losses")
-    plt.xlabel("episode")
-    plt.ylabel("loss")
-    filename = train_mode + 'loss.png'
-    plt.savefig(os.path.join(result_dir, filename))
+    draw_list_graph(losses, result_dir, train_mode + "loss", xlabel="episode", ylabel="loss")
+    draw_list_graph(episodes_length, result_dir, train_mode + "Episode length", xlabel="episode", ylabel="length")
 
+
+def draw_list_graph(lst, result_dir, title, xlabel='episode', ylabel=''):
     plt.close('all')
-    plt.plot(range(len(episodes_length)), episodes_length, color="blue")
-    plt.title("Episode length")
-    plt.xlabel("episode")
-    plt.ylabel("length")
-    plt.savefig(os.path.join(result_dir, 'episode_length.png'))
+    plt.plot(range(len(lst)), lst, color="blue")
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    filename = title + '.png'
+    plt.savefig(os.path.join(result_dir, filename))
 
 
 if __name__ == "__main__":
