@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import or_gym
 
@@ -29,7 +30,7 @@ def play_tsp(env, actions):
 
 
 def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh_exploration, train_mode, episode,
-         seq_len, beta):
+         seq_len, beta, result_dir, result_graph_dir):
     env_config = {'N': seq_len}
     env = or_gym.make('TSP-v1', env_config=env_config)
 
@@ -57,7 +58,7 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
             visual_data.add(coords, actions, i)
         if i % 100 == 99:
             c, a, e = visual_data.get()
-            visualization(c, a, e)
+            visualization(result_graph_dir, c, a, e)
             visual_data.clear()
 
         actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
@@ -85,17 +86,20 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
         loss.backward()
         optimizer.step()
 
+    plt.close('all')
     plt.plot(range(len(losses)), losses, color="blue")
     plt.title(train_mode + " losses")
     plt.xlabel("episode")
     plt.ylabel("loss")
-    plt.show()
+    filename = train_mode + 'loss.png'
+    plt.savefig(os.path.join(result_dir, filename))
 
+    plt.close('all')
     plt.plot(range(len(episodes_length)), episodes_length, color="blue")
     plt.title("Episode length")
     plt.xlabel("episode")
     plt.ylabel("length")
-    plt.show()
+    plt.savefig(os.path.join(result_dir, 'episode_length.png'))
 
 
 if __name__ == "__main__":
@@ -118,5 +122,12 @@ if __name__ == "__main__":
     # Active search hyper parameter
     beta = args.beta
 
+    result_dir = args.result_dir
+
+    result_graph_dir = os.path.join(result_dir, 'graph')
+
+    if not os.path.exists(result_dir):
+        os.makedirs(result_graph_dir)
+
     main(embedding_size, hidden_size, grad_clip, learning_rate,
-         n_glimpses, tanh_exploration, train_mode, episode, seq_len, beta)
+         n_glimpses, tanh_exploration, train_mode, episode, seq_len, beta, result_dir, result_graph_dir)

@@ -1,5 +1,7 @@
 import argparse
 
+import os
+
 import matplotlib.pyplot as plt
 import torch
 
@@ -38,6 +40,8 @@ def args_parser():
     parser.add_argument("--mode", default="active-search", choices=["active-search", "actor-critic"], type=str,
                         dest="mode", help="mode is active-search or actor-critic")
 
+    parser.add_argument("--result_dir", default="./result", type=str, dest="result_dir")
+
     args = parser.parse_args()
     return args
 
@@ -62,9 +66,10 @@ class VisualData:
         self.episode.clear()
 
 
-def visualization(coords, tour_indices, episodes):
+def visualization(result_graph_dir, coords, tour_indices, episodes):
     """
     Args:
+        result_graph_dir: plot save path
         coords: [ data_num x seq_num x 2 ]
         tour_indices: [ data_num x seq_num ]
         episodes: [ data_num ]
@@ -94,4 +99,6 @@ def visualization(coords, tour_indices, episodes):
         ax.set_ylim(0, 1)
 
         ax.title.set_text(episodes[i])
-    plt.show()
+
+    filename = episodes[0] + '-' + episodes[-1] + '_episode_result.png'
+    plt.savefig(os.path.join(result_graph_dir, filename))
