@@ -7,6 +7,24 @@ import matplotlib.pyplot as plt
 from util import rotate_actions
 
 
+def play_tsp(env, actions):
+    """
+    Play TSP in Gym and return reward
+    """
+    total_reward = 0
+    cnt = 0
+    done = False
+    while not done:
+        a = actions[cnt]
+        next_state, reward, done, _ = env.step(a)
+        total_reward += reward
+        cnt += 1
+
+    # return home
+    total_reward += env.distance_matrix[actions[-2], actions[-1]]
+    return total_reward
+
+
 def main():
     train_mode = "active-search"
 
@@ -42,21 +60,7 @@ def main():
 
         actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
 
-        print('first state', s)
-
-        total_reward = 0
-        cnt = 0
-        done = False
-        while not done:
-            a = actions[cnt]
-            next_state, reward, done, _ = env.step(a)
-            total_reward += reward
-
-            cnt += 1
-
-        # return home
-        total_reward += env.distance_matrix[actions[-2], actions[-1]]
-
+        total_reward = play_tsp(env, actions)
         episodes_length.append(total_reward)
         print('total length', total_reward)
 
