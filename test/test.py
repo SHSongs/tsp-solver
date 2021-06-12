@@ -5,6 +5,7 @@ import unittest
 import torch
 
 from pointer_network import PointerNetwork
+from util import rotate_actions
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
@@ -28,6 +29,13 @@ class TestModel(unittest.TestCase):
 
         self.assertTrue((3, seq_len) == log_probs.size())
         self.assertTrue((3, seq_len) == actions.size())
+
+
+class TestUtil(unittest.TestCase):
+
+    def test_rotate_actions(self):
+        actions = rotate_actions([3, 2, 0, 1, 6, 4, 5], 2)
+        self.assertTrue([0, 1, 6, 4, 5, 3, 2] == actions)
 
 
 if __name__ == "__main__":

@@ -4,18 +4,7 @@ import torch
 import torch.optim as optim
 from pointer_network import PointerNetwork
 import matplotlib.pyplot as plt
-
-
-def rotate_path(actions, start):
-    """
-    :param actions: [3, 2, 0, 1, 6, 4, 5]
-    :param start: 2
-    :return: [0, 1, 6, 4, 5, 3, 2]
-    """
-    start_idx = actions.index(start)
-    a_1 = actions[start_idx + 1:]
-    a_2 = actions[0:start_idx + 1]
-    return a_1 + a_2
+from util import rotate_actions
 
 
 def main():
@@ -51,7 +40,7 @@ def main():
 
         log_probs, actions = model(coords)
 
-        actions = rotate_path(actions.squeeze(0).tolist(), s[0])
+        actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
 
         print('first state', s)
 
