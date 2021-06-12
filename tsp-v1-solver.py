@@ -1,10 +1,13 @@
+import argparse
+
 import or_gym
 
 import torch
 import torch.optim as optim
 from pointer_network import PointerNetwork
 import matplotlib.pyplot as plt
-from util import rotate_actions
+
+from util import rotate_actions, args_parser
 
 
 def play_tsp(env, actions):
@@ -25,29 +28,19 @@ def play_tsp(env, actions):
     return total_reward
 
 
-def main():
-    train_mode = "active-search"
-
-    episode = 1000
-    seq_len = 7
-
+def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh_exploration, train_mode, episode,
+         seq_len, beta):
     env_config = {'N': seq_len}
     env = or_gym.make('TSP-v1', env_config=env_config)
 
-    # Pointer network hyper parameter
-    embedding_size = 128
-    hidden_size = 128
-    grad_clip = 1.5
-    learning_rate = 3e-4
-    model = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses=2, tanh_exploration=10)
+    model = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses=n_glimpses,
+                           tanh_exploration=tanh_exploration)
 
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     losses = []
     episodes_length = []
 
-    # Active search hyper parameter
-    beta = 0.99
     moving_avg = torch.zeros(1)
     first_step = True
 
@@ -97,4 +90,24 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = args_parser()
+
+    # Pointer network hyper parameter
+    embedding_size = args.embedding_size
+    hidden_size = args.hidden_size
+    grad_clip = args.grad_clip
+    learning_rate = args.lr
+    n_glimpses = args.n_glimpses
+    tanh_exploration = args.tanh_exploration
+
+    # train mode active-search or actor-critic
+    train_mode = args.mode
+
+    episode = args.episode
+    seq_len = args.seq_len
+
+    # Active search hyper parameter
+    beta = args.beta
+
+    main(embedding_size, hidden_size, grad_clip, learning_rate,
+         n_glimpses, tanh_exploration, train_mode, episode, seq_len, beta)
