@@ -31,29 +31,35 @@ def play_tsp(env, actions):
 
 def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh_exploration, train_mode, episode,
          seq_len, beta, result_dir, result_graph_dir):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    # env setup
     env_config = {'N': seq_len}
     env = or_gym.make('TSP-v1', env_config=env_config)
 
+    # model setup
     model = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses=n_glimpses,
                            tanh_exploration=tanh_exploration)
-
+    model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+    # result data
     losses = []
     episodes_length = []
+    visual_data = VisualData()
 
+    # Active search
     moving_avg = torch.zeros(1)
     first_step = True
-
-    visual_data = VisualData()
 
     for i in range(episode):
         s = env.reset()
 
         coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
 
-        log_probs, actions = model(coords)
+        log_probs, actions = model(coords.to(device))
 
+        # visualization
         if i % 10 == 9:
             visual_data.add(coords, actions, i)
         if i % 100 == 99:
@@ -62,8 +68,8 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
             visual_data.clear()
 
         actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
-
         total_reward = play_tsp(env, actions)
+
         episodes_length.append(total_reward)
         print('total length', total_reward)
 
@@ -71,6 +77,7 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
             moving_avg = total_reward
             first_step = False
             continue
+
 
         moving_avg = moving_avg * beta + total_reward * (1.0 - beta)
         advantage = total_reward - moving_avg

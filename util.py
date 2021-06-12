@@ -87,7 +87,7 @@ def visualization(result_graph_dir, coords, tour_indices, episodes):
         idx = idx.expand(2, -1)
         idx = torch.cat((idx, idx[:, 0:1]), dim=1)
         data = coords[i].transpose(1, 0)
-        data = data.gather(1, idx).cpu().numpy()
+        data = data.gather(1, idx.cpu()).cpu().numpy()
 
         # draw graph
         ax.plot(data[0], data[1], zorder=1)
