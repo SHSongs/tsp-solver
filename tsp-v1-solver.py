@@ -7,7 +7,7 @@ import torch.optim as optim
 from pointer_network import PointerNetwork
 import matplotlib.pyplot as plt
 
-from util import rotate_actions, args_parser
+from util import rotate_actions, args_parser, visualization, VisualData
 
 
 def play_tsp(env, actions):
@@ -44,12 +44,21 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
     moving_avg = torch.zeros(1)
     first_step = True
 
+    visual_data = VisualData()
+
     for i in range(episode):
         s = env.reset()
 
         coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
 
         log_probs, actions = model(coords)
+
+        if i % 10 == 9:
+            visual_data.add(coords, actions, i)
+        if i % 100 == 99:
+            c, a, e = visual_data.get()
+            visualization(c, a, e)
+            visual_data.clear()
 
         actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
 
