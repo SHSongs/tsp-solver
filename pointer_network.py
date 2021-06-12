@@ -33,7 +33,7 @@ class PointerNetwork(nn.Module):
     def forward(self, x):
         """
         Args:
-            param x: [batch_size x seq_len x 2]
+            x: [batch_size x seq_len x 2]
         """
         batch_size = x.shape[0]
         seq_len = x.shape[1]
