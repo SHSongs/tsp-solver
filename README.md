@@ -30,10 +30,9 @@ This repository is tested ...
 
 
 ## Reward
-Reward did not use the formula in the paper.  
-It used the sum of rewards given in gym.  
-But Gym doesn't go back to the starting point.  
-After the game, the distance from the last point to the starting point was added to the total reward.  
+We did not use the reward function in the paper.  
+We used the sum of rewards from the gym. but gym doesn't go back to the starting point.  
+After the game, the distance from the last point and the starting point is added to the total reward.  
 
 ## Usage
 ### Active search
