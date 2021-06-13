@@ -8,7 +8,9 @@ Pytorch implementation of
 The model is trained by Policy Gradient.  
 
 ## What is Traveling Salesman Problem(TSP)
-Given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city?
+Given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city?  
+[Wikipedia](https://en.wikipedia.org/wiki/Travelling_salesman_problem)  
+
 <img src="imgs/tsp-bad-good-case.png" height="300">   
 
 
@@ -27,8 +29,13 @@ This repository is tested ...
 - Pytorch 1.7.1
 
 
-## Usage
+## Reward
+Reward did not use the formula in the paper.  
+It used the sum of rewards given in gym.
+But Gym doesn't go back to the starting point.  
+After the game, the distance from the last point to the starting point was added to the total reward.  
 
+## Usage
 ### Active search
 ```
 python tsp_trainer.py --mode active-search
