@@ -1,15 +1,14 @@
-import argparse
 import os
 
 import or_gym
 
 import torch
 import torch.optim as optim
-import matplotlib.pyplot as plt
 
 from pointer_network import PointerNetwork
 from critic_network import CriticNetwork
-from util import rotate_actions, args_parser, visualization, VisualData
+from util import rotate_actions, visualization, VisualData, draw_list_graph
+from config import args_parser
 import torch.nn as nn
 
 
@@ -31,8 +30,26 @@ def play_tsp(env, actions):
     return total_reward
 
 
-def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh_exploration, train_mode, episode,
-         seq_len, beta, result_dir, result_graph_dir):
+def stack_visualization_data(visual_data, coords, actions, episode, result_graph_dir):
+    """
+    data를 특정 주기마다 쌓고 시각화합니다.
+    Args:
+        visual_data: data를 쌓을 class (VisualData class)
+        coords: 현재 episode의 coords
+        actions: 현재 episode의 actions
+        episode: 현재 episode
+        result_graph_dir: file 저장 경로
+    """
+    if episode % 10 == 9:
+        visual_data.add(coords, actions, episode)
+    if episode % 100 == 99:
+        c, a, e = visual_data.get()
+        visualization(result_graph_dir, c, a, e)
+        visual_data.clear()
+
+
+def train(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh_exploration, train_mode, episode_num,
+          seq_len, beta, result_dir, result_graph_dir):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # env setup
@@ -55,20 +72,14 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
         moving_avg = torch.zeros(1)
         first_step = True
 
-        for i in range(episode):
+        for i in range(episode_num):
             s = env.reset()
 
             coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
 
             log_probs, actions = actor(coords.to(device))
 
-            # visualization
-            if i % 10 == 9:
-                visual_data.add(coords, actions, i)
-            if i % 100 == 99:
-                c, a, e = visual_data.get()
-                visualization(result_graph_dir, c, a, e)
-                visual_data.clear()
+            stack_visualization_data(visual_data, coords, actions, i, result_graph_dir)
 
             actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
             total_reward = play_tsp(env, actions)
@@ -103,7 +114,7 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
         critic_optimizer = optim.Adam(critic.parameters(), lr=learning_rate)
         l2Loss = nn.MSELoss()
 
-        for i in range(episode):
+        for i in range(episode_num):
             s = env.reset()
 
             coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0).to(device)
@@ -111,15 +122,10 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
             log_probs, actions = actor(coords)
             value = critic(coords)
 
-            # visualization
-            if i % 10 == 9:
-                visual_data.add(coords, actions, i)
-            if i % 100 == 99:
-                c, a, e = visual_data.get()
-                visualization(result_graph_dir, c, a, e)
-                visual_data.clear()
+            stack_visualization_data(visual_data, coords, actions, i, result_graph_dir)
 
             actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
+
             total_reward = play_tsp(env, actions)
 
             episodes_length.append(total_reward)
@@ -151,21 +157,11 @@ def main(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh
             optimizer.step()
             critic_optimizer.step()
 
-    draw_list_graph(losses, result_dir, train_mode + "loss", xlabel="episode", ylabel="loss")
-    draw_list_graph(episodes_length, result_dir, train_mode + "Episode length", xlabel="episode", ylabel="length")
+    draw_list_graph(losses, result_dir, train_mode + " loss", xlabel="episode", ylabel="loss")
+    draw_list_graph(episodes_length, result_dir, train_mode + " episode length", xlabel="episode", ylabel="length")
 
 
-def draw_list_graph(lst, result_dir, title, xlabel='episode', ylabel=''):
-    plt.close('all')
-    plt.plot(range(len(lst)), lst, color="blue")
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    filename = title + '.png'
-    plt.savefig(os.path.join(result_dir, filename))
-
-
-if __name__ == "__main__":
+def main():
     args = args_parser()
 
     # Pointer network hyper parameter
@@ -192,5 +188,9 @@ if __name__ == "__main__":
     if not os.path.exists(result_dir):
         os.makedirs(result_graph_dir)
 
-    main(embedding_size, hidden_size, grad_clip, learning_rate,
-         n_glimpses, tanh_exploration, train_mode, episode, seq_len, beta, result_dir, result_graph_dir)
+    train(embedding_size, hidden_size, grad_clip, learning_rate,
+          n_glimpses, tanh_exploration, train_mode, episode, seq_len, beta, result_dir, result_graph_dir)
+
+
+if __name__ == "__main__":
+    main()
