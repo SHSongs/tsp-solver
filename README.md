@@ -48,14 +48,11 @@ python tsp_trainer.py --mode actor-critic
 ## Results
 
 ### Active search
-<img src="imgs/9-99_episode_result.png" height="150">   
-<img src="imgs/909-999_episode_result.png" height="150">  
-<img src="imgs/active-searchloss.png" height="150">   
-<img src="imgs/episode_length.png" height="150">   
+<img src="imgs/9-99_episode_result.png" height="200"><img src="imgs/909-999_episode_result.png" height="200">  
+<img src="imgs/active-searchloss.png" height="200"><img src="imgs/episode_length.png" height="200">   
 
 ### Actor critic
-<img src="imgs/actor-critic_episode_length.png" height="150">   
-<img src="imgs/actor-critic_loss.png" height="150">   
+<img src="imgs/actor-critic_episode_length.png" height="200"><img src="imgs/actor-critic_loss.png" height="200">   
 
 
 
