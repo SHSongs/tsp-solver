@@ -188,6 +188,21 @@ def main():
     if not os.path.exists(result_dir):
         os.makedirs(result_graph_dir)
 
+    print("args: ")
+    print("embedding size: %d" % embedding_size)
+    print("hidden size: %d" % hidden_size)
+    print("grad clip: %f" % grad_clip)
+    print("learning rate: %f" % learning_rate)
+    print("num glimpses: %d" % n_glimpses)
+    print("tanh exploration: %d" % tanh_exploration)
+
+    print("")
+    print("mode: %s" % train_mode)
+    print("episode: %d" % episode)
+    print("sequence length: %d" % seq_len)
+    print("beta: %f" % beta)
+    print("result dir: %s" % result_dir)
+
     train(embedding_size, hidden_size, grad_clip, learning_rate,
           n_glimpses, tanh_exploration, train_mode, episode, seq_len, beta, result_dir, result_graph_dir)
 
