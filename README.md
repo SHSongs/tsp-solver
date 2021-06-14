@@ -31,8 +31,8 @@ This repository is tested ...
 
 ## Reward
 We did not use the reward function in the paper.  
-We used the sum of rewards from the gym. but gym doesn't go back to the starting point.  
-After the game, the distance from the last point and the starting point is added to the total reward.  
+We used the sum of rewards from the gym. but gym doesn't go back to the starting city.  
+After the game, the distance from the last city and the starting city is added to the total reward.  
 
 ## Usage
 ### Active search
@@ -43,6 +43,11 @@ python tsp_trainer.py --mode active-search
 ```
 python tsp_trainer.py --mode actor-critic
 ```
+### Test
+```
+python tsp_tester.py --seq_len 20 --actor_dir ./result/actor.pth
+```
+
 #### [configs](config.py)
 ```
 --lr 3e-4
@@ -59,6 +64,7 @@ python tsp_trainer.py --mode actor-critic
 
 --mode active-search
 --result_dir ./result
+--actor_dir ./result/actor.pth  #use tsp_tester
 ```
 ## Results
 
