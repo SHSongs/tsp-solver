@@ -1,15 +1,14 @@
 # TSP Solver
 
-Neural Combinatorial Optimization with RL
-
 Pytorch implementation of
 [Neural Combinatorial Optimization with Reinforcement Learning](http://arxiv.org/abs/1611.09940)  
 
+<img src="imgs/pointer_net.png" height="200">  
+The neural network consists in LSTM encoder decoder with an attention module connecting the decoder to the encoder.  
 The model is trained by Policy Gradient.  
 
 ## What is Traveling Salesman Problem(TSP)
-Given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city?  
-[Wikipedia](https://en.wikipedia.org/wiki/Travelling_salesman_problem)  
+Given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city?  [Wikipedia](https://en.wikipedia.org/wiki/Travelling_salesman_problem)  
 
 <img src="imgs/tsp-bad-good-case.png" height="300">   
 
@@ -31,7 +30,7 @@ This repository is tested ...
 
 ## Reward
 We did not use the reward function in the paper.  
-We used the sum of rewards from the gym. but gym doesn't go back to the starting city.  
+We used the sum of rewards from the emulator. but the emulator doesn't go back to the starting city.  
 After the game, the distance from the last city and the starting city is added to the total reward.  
 
 ## Usage
@@ -64,6 +63,7 @@ python tsp_tester.py --seq_len 20 --actor_dir ./result/actor.pth
 
 --mode active-search
 --result_dir ./result
+
 --actor_dir ./result/actor.pth  #use tsp_tester
 ```
 ## Results
