@@ -48,7 +48,8 @@ def stack_visualization_data(visual_data, coords, actions, episode, result_graph
         visual_data.clear()
 
 
-def train(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tanh_exploration, train_mode, episode_num,
+def train(embedding_size, hidden_size, grad_clip, decay, learning_rate, n_glimpses, tanh_exploration, train_mode,
+          episode_num,
           seq_len, beta, result_dir, result_graph_dir):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -59,7 +60,7 @@ def train(embedding_size, hidden_size, grad_clip, learning_rate, n_glimpses, tan
     # actor setup
     actor = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
     actor.to(device)
-    optimizer = optim.Adam(actor.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(actor.parameters(), lr=learning_rate, weight_decay=decay)
 
     # result data
     losses = []
@@ -168,6 +169,7 @@ def main():
     embedding_size = args.embedding_size
     hidden_size = args.hidden_size
     grad_clip = args.grad_clip
+    decay = args.decay
     learning_rate = args.lr
     n_glimpses = args.n_glimpses
     tanh_exploration = args.tanh_exploration
@@ -192,6 +194,7 @@ def main():
     print("embedding size: %d" % embedding_size)
     print("hidden size: %d" % hidden_size)
     print("grad clip: %f" % grad_clip)
+    print("weight decay: %f" % decay)
     print("learning rate: %f" % learning_rate)
     print("num glimpses: %d" % n_glimpses)
     print("tanh exploration: %d" % tanh_exploration)
@@ -203,7 +206,7 @@ def main():
     print("beta: %f" % beta)
     print("result dir: %s" % result_dir)
 
-    train(embedding_size, hidden_size, grad_clip, learning_rate,
+    train(embedding_size, hidden_size, grad_clip, decay, learning_rate,
           n_glimpses, tanh_exploration, train_mode, episode, seq_len, beta, result_dir, result_graph_dir)
 
 

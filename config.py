@@ -8,6 +8,7 @@ def args_parser():
     parser.add_argument("--embedding_size", default=128, type=int, dest="embedding_size")
     parser.add_argument("--hidden_size", default=128, type=int, dest="hidden_size")
     parser.add_argument("--grad_clip", default=1.5, type=float, dest="grad_clip")
+    parser.add_argument("--decay", default=0.01, type=float, dest="decay")
 
     parser.add_argument("--n_glimpses", default=2, type=int, dest="n_glimpses")
     parser.add_argument("--tanh_exploration", default=10, type=int, dest="tanh_exploration")
