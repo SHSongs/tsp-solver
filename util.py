@@ -73,8 +73,29 @@ def visualization(result_graph_dir, coords, tour_indices, episodes):
 
         ax.title.set_text(episodes[i])
 
+        if len(tour_indices) == 1:
+            break
+
     filename = episodes[0] + '-' + episodes[-1] + '_episode_result.png'
     plt.savefig(os.path.join(result_graph_dir, filename))
+
+
+def stack_visualization_data(visual_data, coords, actions, episode, result_graph_dir):
+    """
+    data를 특정 주기마다 쌓고 시각화합니다.
+    Args:
+        visual_data: data를 쌓을 class (VisualData class)
+        coords: 현재 episode의 coords
+        actions: 현재 episode의 actions
+        episode: 현재 episode
+        result_graph_dir: file 저장 경로
+    """
+    if episode % 10 == 9:
+        visual_data.add(coords, actions, episode)
+    if episode % 100 == 99:
+        c, a, e = visual_data.get()
+        visualization(result_graph_dir, c, a, e)
+        visual_data.clear()
 
 
 def draw_list_graph(lst, result_dir, title, xlabel='episode', ylabel=''):

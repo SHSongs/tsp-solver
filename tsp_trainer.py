@@ -7,45 +7,10 @@ import torch.optim as optim
 
 from pointer_network import PointerNetwork
 from critic_network import CriticNetwork
-from util import rotate_actions, visualization, VisualData, draw_list_graph
+from util import rotate_actions, VisualData, draw_list_graph, stack_visualization_data
+from gym_util import play_tsp
 from config import args_parser
 import torch.nn as nn
-
-
-def play_tsp(env, actions):
-    """
-    Play TSP in Gym and return reward
-    """
-    total_reward = 0
-    cnt = 0
-    done = False
-    while not done:
-        a = actions[cnt]
-        next_state, reward, done, _ = env.step(a)
-        total_reward += reward
-        cnt += 1
-
-    # return home
-    total_reward += env.distance_matrix[actions[-2], actions[-1]]
-    return total_reward
-
-
-def stack_visualization_data(visual_data, coords, actions, episode, result_graph_dir):
-    """
-    data를 특정 주기마다 쌓고 시각화합니다.
-    Args:
-        visual_data: data를 쌓을 class (VisualData class)
-        coords: 현재 episode의 coords
-        actions: 현재 episode의 actions
-        episode: 현재 episode
-        result_graph_dir: file 저장 경로
-    """
-    if episode % 10 == 9:
-        visual_data.add(coords, actions, episode)
-    if episode % 100 == 99:
-        c, a, e = visual_data.get()
-        visualization(result_graph_dir, c, a, e)
-        visual_data.clear()
 
 
 def train(embedding_size, hidden_size, grad_clip, decay, learning_rate, n_glimpses, tanh_exploration, train_mode,
@@ -157,6 +122,8 @@ def train(embedding_size, hidden_size, grad_clip, decay, learning_rate, n_glimps
 
             optimizer.step()
             critic_optimizer.step()
+
+    torch.save(actor.state_dict(), os.path.join(result_dir, 'actor.pth'))
 
     draw_list_graph(losses, result_dir, train_mode + " loss", xlabel="episode", ylabel="loss")
     draw_list_graph(episodes_length, result_dir, train_mode + " episode length", xlabel="episode", ylabel="length")
