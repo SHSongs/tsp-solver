@@ -7,24 +7,21 @@ import torch.optim as optim
 
 from pointer_network import PointerNetwork
 from critic_network import CriticNetwork
-from util import rotate_actions, VisualData, draw_list_graph, stack_visualization_data
+from util import rotate_actions, VisualData, draw_list_graph, \
+    stack_visualization_data, make_pointer_network
 from gym_util import play_tsp
 from config import args_parser
 import torch.nn as nn
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-def train(embedding_size, hidden_size, grad_clip, decay, learning_rate, n_glimpses, tanh_exploration, train_mode,
-          episode_num,
+
+def train(actor, grad_clip, decay, learning_rate, train_mode, episode_num,
           seq_len, beta, result_dir, result_graph_dir):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     # env setup
     env_config = {'N': seq_len}
     env = or_gym.make('TSP-v1', env_config=env_config)
 
-    # actor setup
-    actor = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
-    actor.to(device)
     optimizer = optim.Adam(actor.parameters(), lr=learning_rate, weight_decay=decay)
 
     # result data
@@ -173,8 +170,10 @@ def main():
     print("beta: %f" % beta)
     print("result dir: %s" % result_dir)
 
-    train(embedding_size, hidden_size, grad_clip, decay, learning_rate,
-          n_glimpses, tanh_exploration, train_mode, episode, seq_len, beta, result_dir, result_graph_dir)
+    ptr_net = make_pointer_network(embedding_size, hidden_size, n_glimpses, tanh_exploration, seq_len, device)
+
+    train(ptr_net, grad_clip, decay, learning_rate, train_mode, episode,
+          seq_len, beta, result_dir, result_graph_dir)
 
 
 if __name__ == "__main__":

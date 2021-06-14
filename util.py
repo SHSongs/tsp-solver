@@ -3,6 +3,14 @@ import os
 import matplotlib.pyplot as plt
 import torch
 
+from pointer_network import PointerNetwork
+
+
+def make_pointer_network(embedding_size, hidden_size, n_glimpses, tanh_exploration, seq_len, device):
+    actor = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
+    actor.to(device)
+    return actor
+
 
 def rotate_actions(actions, start):
     """
