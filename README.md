@@ -43,7 +43,23 @@ python tsp_trainer.py --mode active-search
 ```
 python tsp_trainer.py --mode actor-critic
 ```
+#### [configs](config.py)
+```
+--lr 3e-4
+--embedding_size 128
+--hidden_size 128
+--grad_clip 1.5
+--decay 0.01
 
+--n_glimpses 2
+--tanh_exploration 10
+--beta 0.99
+--episode 1000
+--seq_len10
+
+--mode active-search
+--result_dir ./result
+```
 ## Results
 
 ### Active search
