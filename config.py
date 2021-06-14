@@ -22,6 +22,7 @@ def args_parser():
                         dest="mode", help="mode is active-search or actor-critic")
 
     parser.add_argument("--result_dir", default="./result", type=str, dest="result_dir")
+    parser.add_argument("--actor_dir", default="", type=str, dest="actor_dir")
 
     args = parser.parse_args()
     return args
