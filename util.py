@@ -4,12 +4,19 @@ import matplotlib.pyplot as plt
 import torch
 
 from pointer_network import PointerNetwork
+from critic_network import CriticNetwork
 
 
 def make_pointer_network(embedding_size, hidden_size, n_glimpses, tanh_exploration, seq_len, device):
     actor = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
     actor.to(device)
     return actor
+
+
+def make_critic_network(embedding_size, hidden_size, n_glimpses, tanh_exploration, seq_len, device):
+    critic = CriticNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
+    critic.to(device)
+    return critic
 
 
 def rotate_actions(actions, start):
