@@ -5,10 +5,8 @@ import or_gym
 import torch
 import torch.optim as optim
 
-from pointer_network import PointerNetwork
-from critic_network import CriticNetwork
 from util import rotate_actions, VisualData, draw_list_graph, \
-    stack_visualization_data, make_pointer_network
+    stack_visualization_data, make_pointer_network, make_critic_network
 from gym_util import play_tsp
 from config import args_parser
 import torch.nn as nn
@@ -16,7 +14,7 @@ import torch.nn as nn
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def train(actor, grad_clip, decay, learning_rate, train_mode, episode_num,
+def train(actor, critic, grad_clip, decay, learning_rate, train_mode, episode_num,
           seq_len, beta, result_dir, result_graph_dir):
     # env setup
     env_config = {'N': seq_len}
@@ -72,8 +70,6 @@ def train(actor, grad_clip, decay, learning_rate, train_mode, episode_num,
     elif train_mode == "actor-critic":
 
         # critic
-        critic = CriticNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
-        critic.to(device)
         critic_optimizer = optim.Adam(critic.parameters(), lr=learning_rate)
         l2Loss = nn.MSELoss()
 
@@ -172,7 +168,11 @@ def main():
 
     ptr_net = make_pointer_network(embedding_size, hidden_size, n_glimpses, tanh_exploration, seq_len, device)
 
-    train(ptr_net, grad_clip, decay, learning_rate, train_mode, episode,
+    critic_net = None
+    if train_mode == "actor-critic":
+        critic_net = make_critic_network(embedding_size, hidden_size, n_glimpses, tanh_exploration, seq_len, device)
+
+    train(ptr_net, critic_net, grad_clip, decay, learning_rate, train_mode, episode,
           seq_len, beta, result_dir, result_graph_dir)
 
 
