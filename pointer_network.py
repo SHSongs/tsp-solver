@@ -30,21 +30,25 @@ class PointerNetwork(nn.Module):
         self.decoder_start_input = nn.Parameter(torch.FloatTensor(embedding_size))
         self.decoder_start_input.data.uniform_(-(1. / math.sqrt(embedding_size)), 1. / math.sqrt(embedding_size))
 
-    def forward(self, x):
+    # def one_step(self, x, mask):
+
+    def forward(self, x, visited):
         """
         Args:
             x: [batch_size x seq_len x 2]
+            visited :
         """
+        visited = torch.Tensor(visited).unsqueeze(0)
+        mask = visited > 0
+
         batch_size = x.shape[0]
         seq_len = x.shape[1]
-
         embedded = self.embedding(x)
 
         encoder_outputs, (hidden, context) = self.encoder(embedded)
 
         prev_chosen_logprobs = []
         prev_chosen_indices = []
-        mask = torch.zeros(batch_size, self.seq_len, dtype=torch.bool)
 
         decoder_input = self.decoder_start_input.unsqueeze(0).repeat(batch_size, 1)
         for idx in range(seq_len):

@@ -38,9 +38,14 @@ def train(actor, critic, grad_clip, decay, learning_rate, train_mode, episode_nu
 
             coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
 
-            log_probs, actions = actor(coords.to(device))
+            visited = env.visit_log
+
+            log_probs, actions = actor(coords.to(device), visited)
 
             stack_visualization_data(visual_data, coords, actions, i, result_graph_dir)
+
+            next_state, reward, done, _ = env.step(0)
+            visited = env.visit_log
 
             actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
             total_reward = play_tsp(env, actions)
