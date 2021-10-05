@@ -25,14 +25,22 @@ def test(actor, actor_dir, seq_len, result_dir):
 
     coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
 
-    _, actions = actor(coords.to(device))
+    actor.prepare(coords.to(device))
+
+    done = False
+    total_reward = 0
+
+    while not done:
+        visited = env.visit_log
+        log_prob, action = actor.one_step(visited, env.step_count)
+        next_state, reward, done, _ = env.step(action)
+        total_reward += reward
+
+    log_probs, actions = actor.result()
 
     visual_data.add(coords, actions, "test")
     c, a, e = visual_data.get()
     visualization(result_dir, c, a, e)
-
-    actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
-    total_reward = play_tsp(env, actions)
 
     print('total length', total_reward)
 
