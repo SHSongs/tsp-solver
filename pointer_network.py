@@ -38,6 +38,7 @@ class PointerNetwork(nn.Module):
         self.hidden = None
         self.context = None
         self.embedded = None
+        self.pass_prepare = False
 
     def prepare(self, x):
         self.batch_size = x.shape[0]
@@ -49,8 +50,11 @@ class PointerNetwork(nn.Module):
         # init chosen
         self.prev_chosen_logprobs = []
         self.prev_chosen_indices = []
+        self.pass_prepare = True
 
     def one_step(self, visited, idx):
+        assert self.pass_prepare is True, 'execute prepare func'
+
         visited = torch.Tensor(visited).unsqueeze(0)
         mask = visited > 0
 
@@ -86,6 +90,8 @@ class PointerNetwork(nn.Module):
         return log_probs, chosen
 
     def result(self):
+        assert len(self.prev_chosen_logprobs) > 0, 'execute prepare, one step func'
+
         return torch.stack(self.prev_chosen_logprobs, 1), torch.stack(self.prev_chosen_indices, 1)
 
     def forward(self, x):
