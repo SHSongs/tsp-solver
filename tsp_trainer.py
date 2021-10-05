@@ -5,9 +5,8 @@ import or_gym
 import torch
 import torch.optim as optim
 
-from util import rotate_actions, VisualData, draw_list_graph, \
+from util import VisualData, draw_list_graph, \
     stack_visualization_data, make_pointer_network, make_critic_network
-from gym_util import play_tsp
 from config import args_parser
 import torch.nn as nn
 

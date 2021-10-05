@@ -3,8 +3,7 @@ import os
 import or_gym
 
 import torch
-from util import rotate_actions, VisualData, visualization, make_pointer_network
-from gym_util import play_tsp
+from util import VisualData, visualization, make_pointer_network
 from config import args_parser
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
