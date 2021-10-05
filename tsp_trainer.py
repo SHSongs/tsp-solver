@@ -34,21 +34,22 @@ def train(actor, critic, grad_clip, decay, learning_rate, train_mode, episode_nu
         first_step = True
 
         for i in range(episode_num):
-            s = env.reset()
-
+            env.reset()
             coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
 
-            visited = env.visit_log
+            actor.prepare(coords.to(device))
 
-            log_probs, actions = actor(coords.to(device), visited)
+            done = False
+            total_reward = 0
 
+            while not done:
+                visited = env.visit_log
+                log_prob, action = actor.one_step(visited, env.step_count)
+                next_state, reward, done, _ = env.step(action)
+                total_reward += reward
+
+            log_probs, actions = actor.result()
             stack_visualization_data(visual_data, coords, actions, i, result_graph_dir)
-
-            next_state, reward, done, _ = env.step(0)
-            visited = env.visit_log
-
-            actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
-            total_reward = play_tsp(env, actions)
 
             episodes_length.append(total_reward)
             print('total length', total_reward)
