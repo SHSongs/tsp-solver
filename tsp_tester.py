@@ -5,6 +5,7 @@ import or_gym
 import torch
 from util import VisualData, visualization, make_pointer_network
 from config import args_parser
+from gym_util import play_tsp
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -20,20 +21,8 @@ def test(actor, actor_dir, seq_len, result_dir):
 
     visual_data = VisualData()
 
-    s = env.reset()
-
     coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
-
-    actor.prepare(coords.to(device))
-
-    done = False
-    total_reward = 0
-
-    while not done:
-        visited = env.visit_log
-        log_prob, action = actor.one_step(visited, env.step_count)
-        next_state, reward, done, _ = env.step(action)
-        total_reward += reward
+    total_reward = play_tsp(env, coords, actor, device)
 
     log_probs, actions = actor.result()
 

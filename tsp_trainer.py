@@ -9,6 +9,7 @@ from util import VisualData, draw_list_graph, \
     stack_visualization_data, make_pointer_network, make_critic_network
 from config import args_parser
 import torch.nn as nn
+from gym_util import play_tsp
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -33,19 +34,9 @@ def train(actor, critic, grad_clip, decay, learning_rate, train_mode, episode_nu
         first_step = True
 
         for i in range(episode_num):
-            env.reset()
+
             coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
-
-            actor.prepare(coords.to(device))
-
-            done = False
-            total_reward = 0
-
-            while not done:
-                visited = env.visit_log
-                log_prob, action = actor.one_step(visited, env.step_count)
-                next_state, reward, done, _ = env.step(action)
-                total_reward += reward
+            total_reward = play_tsp(env, coords, actor, device)
 
             log_probs, actions = actor.result()
             stack_visualization_data(visual_data, coords, actions, i, result_graph_dir)
@@ -79,22 +70,10 @@ def train(actor, critic, grad_clip, decay, learning_rate, train_mode, episode_nu
         l2Loss = nn.MSELoss()
 
         for i in range(episode_num):
-            s = env.reset()
-
-            coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0).to(device)
+            coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
+            total_reward = play_tsp(env, coords, actor, device)
 
             value = critic(coords)
-
-            actor.prepare(coords.to(device))
-
-            done = False
-            total_reward = 0
-
-            while not done:
-                visited = env.visit_log
-                log_prob, action = actor.one_step(visited, env.step_count)
-                next_state, reward, done, _ = env.step(action)
-                total_reward += reward
 
             log_probs, actions = actor.result()
             stack_visualization_data(visual_data, coords, actions, i, result_graph_dir)
