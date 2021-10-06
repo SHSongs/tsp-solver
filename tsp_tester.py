@@ -3,7 +3,7 @@ import os
 import or_gym
 
 import torch
-from util import VisualData, visualization, make_pointer_network
+from util import VisualData, visualization, make_pointer_network, create_folder
 from config import args_parser
 from gym_util import play_tsp
 
@@ -40,8 +40,7 @@ def main():
     result_dir = args.result_dir
     actor_dir = args.actor_dir
 
-    if not os.path.exists(result_dir):
-        os.makedirs(result_dir)
+    create_folder(result_dir)
 
     # Pointer network hyper parameter
     embedding_size = args.embedding_size

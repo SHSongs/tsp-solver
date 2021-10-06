@@ -6,7 +6,7 @@ import torch
 import torch.optim as optim
 
 from util import VisualData, draw_list_graph, \
-    stack_visualization_data, make_pointer_network, make_critic_network
+    stack_visualization_data, make_pointer_network, make_critic_network, create_folder
 from config import args_parser
 import torch.nn as nn
 from gym_util import play_tsp
@@ -26,6 +26,10 @@ def train(actor, critic, grad_clip, decay, learning_rate, train_mode, episode_nu
     losses = []
     episodes_length = []
     visual_data = VisualData()
+
+    create_folder(result_dir)
+    create_folder(result_graph_dir)
+
 
     if train_mode == "active-search":
 

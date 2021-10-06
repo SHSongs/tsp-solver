@@ -7,6 +7,11 @@ from pointer_network import PointerNetwork
 from critic_network import CriticNetwork
 
 
+def create_folder(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
 def make_pointer_network(embedding_size, hidden_size, n_glimpses, tanh_exploration, seq_len, device):
     actor = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
     actor.to(device)
