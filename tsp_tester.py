@@ -3,9 +3,9 @@ import os
 import or_gym
 
 import torch
-from util import rotate_actions, VisualData, visualization, make_pointer_network
-from gym_util import play_tsp
+from util import VisualData, visualization, make_pointer_network, create_folder
 from config import args_parser
+from gym_util import play_tsp
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -21,18 +21,14 @@ def test(actor, actor_dir, seq_len, result_dir):
 
     visual_data = VisualData()
 
-    s = env.reset()
-
     coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
+    total_reward = play_tsp(env, coords, actor, device)
 
-    _, actions = actor(coords.to(device))
+    log_probs, actions = actor.result()
 
     visual_data.add(coords, actions, "test")
     c, a, e = visual_data.get()
     visualization(result_dir, c, a, e)
-
-    actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
-    total_reward = play_tsp(env, actions)
 
     print('total length', total_reward)
 
@@ -44,8 +40,7 @@ def main():
     result_dir = args.result_dir
     actor_dir = args.actor_dir
 
-    if not os.path.exists(result_dir):
-        os.makedirs(result_dir)
+    create_folder(result_dir)
 
     # Pointer network hyper parameter
     embedding_size = args.embedding_size
@@ -70,3 +65,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print('end tsp')

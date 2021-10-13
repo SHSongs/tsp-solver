@@ -1,16 +1,15 @@
-def play_tsp(env, actions):
-    """
-    Play TSP in Gym and return reward
-    """
-    total_reward = 0
-    cnt = 0
-    done = False
-    while not done:
-        a = actions[cnt]
-        next_state, reward, done, _ = env.step(a)
-        total_reward += reward
-        cnt += 1
+def play_tsp(env, coords, actor, device):
+    env.reset()
 
-    # return home
-    total_reward += env.distance_matrix[actions[-2], actions[-1]]
+    actor.prepare(coords.to(device))
+
+    done = False
+    total_reward = 0
+
+    while not done:
+        visited = env.visit_log
+        log_prob, action = actor.one_step(visited, env.step_count)
+        next_state, reward, done, _ = env.step(action)
+        total_reward += reward
+
     return total_reward

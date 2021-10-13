@@ -5,11 +5,11 @@ import or_gym
 import torch
 import torch.optim as optim
 
-from util import rotate_actions, VisualData, draw_list_graph, \
-    stack_visualization_data, make_pointer_network, make_critic_network
-from gym_util import play_tsp
+from util import VisualData, draw_list_graph, \
+    stack_visualization_data, make_pointer_network, make_critic_network, create_folder
 from config import args_parser
 import torch.nn as nn
+from gym_util import play_tsp
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -27,6 +27,10 @@ def train(actor, critic, grad_clip, decay, learning_rate, train_mode, episode_nu
     episodes_length = []
     visual_data = VisualData()
 
+    create_folder(result_dir)
+    create_folder(result_graph_dir)
+
+
     if train_mode == "active-search":
 
         # Active search
@@ -34,16 +38,12 @@ def train(actor, critic, grad_clip, decay, learning_rate, train_mode, episode_nu
         first_step = True
 
         for i in range(episode_num):
-            s = env.reset()
 
             coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
+            total_reward = play_tsp(env, coords, actor, device)
 
-            log_probs, actions = actor(coords.to(device))
-
+            log_probs, actions = actor.result()
             stack_visualization_data(visual_data, coords, actions, i, result_graph_dir)
-
-            actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
-            total_reward = play_tsp(env, actions)
 
             episodes_length.append(total_reward)
             print('total length', total_reward)
@@ -74,18 +74,13 @@ def train(actor, critic, grad_clip, decay, learning_rate, train_mode, episode_nu
         l2Loss = nn.MSELoss()
 
         for i in range(episode_num):
-            s = env.reset()
+            coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0)
+            total_reward = play_tsp(env, coords, actor, device)
 
-            coords = torch.FloatTensor(env.coords).transpose(1, 0).unsqueeze(0).to(device)
-
-            log_probs, actions = actor(coords)
             value = critic(coords)
 
+            log_probs, actions = actor.result()
             stack_visualization_data(visual_data, coords, actions, i, result_graph_dir)
-
-            actions = rotate_actions(actions.squeeze(0).tolist(), s[0])
-
-            total_reward = play_tsp(env, actions)
 
             episodes_length.append(total_reward)
             print('total length', total_reward)
@@ -178,3 +173,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print('end tsp')
