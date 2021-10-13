@@ -57,10 +57,10 @@ class PointerNetwork(nn.Module):
 
         visited = torch.Tensor(visited).unsqueeze(0)
         mask = visited > 0
+        d = self.decoder_input.unsqueeze(1)
+        _, (self.hidden, self.context) = self.decoder(self.decoder_input.unsqueeze(1), (self.hidden, self.context))
 
-        _, (hidden, context) = self.decoder(self.decoder_input.unsqueeze(1), (self.hidden, self.context))
-
-        query = hidden.squeeze(0)
+        query = self.hidden.squeeze(0)
         for _ in range(self.n_glimpses):
             ref, logits = self.glimpse(query, self.encoder_outputs)
             _mask = mask.clone()
@@ -77,12 +77,8 @@ class PointerNetwork(nn.Module):
         probs = torch.softmax(logits, dim=-1)
         cat = Categorical(probs)
         chosen = cat.sample()
-        mask[[i for i in range(self.batch_size)], chosen] = True
+        # mask[[i for i in range(self.batch_size)], chosen] = True
         log_probs = cat.log_prob(chosen)
-
-        # chosen(next city)[batch_size x 1 x hidden_size ] 의 값으로 embedded[batch_size x seq_len x hidden_size 를 같게
-        tmp_chosen = chosen[:, None, None].repeat(1, 1, self.hidden_size)
-        decoder_input = self.embedded.gather(1, tmp_chosen).squeeze(1)
 
         self.prev_chosen_logprobs.append(log_probs)
         self.prev_chosen_indices.append(chosen)
