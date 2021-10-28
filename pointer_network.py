@@ -1,4 +1,5 @@
 import math
+import random
 
 import torch
 import torch.nn as nn
@@ -52,12 +53,11 @@ class PointerNetwork(nn.Module):
         self.prev_chosen_indices = []
         self.pass_prepare = True
 
-    def one_step(self, visited, idx):
+    def one_step(self, visited):
         assert self.pass_prepare is True, 'execute prepare func'
 
         visited = torch.Tensor(visited).unsqueeze(0)
         mask = visited > 0
-        d = self.decoder_input.unsqueeze(1)
         _, (self.hidden, self.context) = self.decoder(self.decoder_input.unsqueeze(1), (self.hidden, self.context))
 
         query = self.hidden.squeeze(0)
@@ -77,8 +77,23 @@ class PointerNetwork(nn.Module):
         probs = torch.softmax(logits, dim=-1)
         cat = Categorical(probs)
         chosen = cat.sample()
-        # mask[[i for i in range(self.batch_size)], chosen] = True
         log_probs = cat.log_prob(chosen)
+
+        return log_probs, chosen
+
+    def sample_action(self, visited, epsilon):
+        assert self.pass_prepare is True, 'execute prepare func'
+
+        log_probs, chosen = self.one_step(visited)
+
+        coin = random.random()
+        if coin < epsilon:
+            cities = list(range(0, visited.shape[0]))
+
+            for i in self.prev_chosen_indices:
+                cities.remove(i)
+
+            chosen = random.choice(cities)
 
         self.prev_chosen_logprobs.append(log_probs)
         self.prev_chosen_indices.append(chosen)
