@@ -7,6 +7,11 @@ from pointer_network import PointerNetwork
 from critic_network import CriticNetwork
 
 
+def create_folder(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
 def make_pointer_network(embedding_size, hidden_size, n_glimpses, tanh_exploration, seq_len, device):
     actor = PointerNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
     actor.to(device)
@@ -17,21 +22,6 @@ def make_critic_network(embedding_size, hidden_size, n_glimpses, tanh_exploratio
     critic = CriticNetwork(embedding_size, hidden_size, seq_len, n_glimpses, tanh_exploration)
     critic.to(device)
     return critic
-
-
-def rotate_actions(actions, start):
-    """
-    Examples::
-        Args:
-            actions: [3, 2, 0, 1, 6, 4, 5]
-            start: 2
-        return
-            [0, 1, 6, 4, 5, 3, 2]
-    """
-    start_idx = actions.index(start)
-    a_1 = actions[start_idx + 1:]
-    a_2 = actions[0:start_idx + 1]
-    return a_1 + a_2
 
 
 class VisualData:
